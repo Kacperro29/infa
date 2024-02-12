@@ -1,162 +1,141 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <ctime>
+#include <vector>
+#include <algorithm>
+#include <list>
+
 using namespace std;
 
-void stworz_dane(){
-    ofstream fout("dane.txt");
-        for(int i=1;i<=10;i++){
-            int a=rand()%99+1;;
-            fout<<a<<";";
-    }
-    fout.close();
+// 1. Wyznaczanie miejsc zerowych funkcji metodą połowienia
+double funkcja(double x) {
+    return x*x - 6;
 }
-min_max(double Tab[],int n_elementow){
-    int biezaca_wartosc_min,biezaca_wartosc_max,idx;
-    if (Tab[0] > Tab[1]){
-        biezaca_wartosc_min = Tab[1];
-        biezaca_wartosc_max = Tab[0];
-    } else {
-        biezaca_wartosc_min = Tab[0];
-        biezaca_wartosc_max = Tab[1];
+
+double miejsceZeroweMetodaPolowienia(double a, double b, double epsilon) {
+    double fa = funkcja(a);
+    double fb = funkcja(b);
+
+    if (fa * fb > 0) {
+        cout << "Nie można zagwarantować istnienia miejsca zerowego w przedziale [" << a << ", " << b << "]." << endl;
+        return -1;
     }
-    for (idx = 2; idx < n_elementow-1; idx += 2){
-        if (Tab[idx] > Tab[idx + 1]){
-            if (Tab[idx] > biezaca_wartosc_max){
-                biezaca_wartosc_max = Tab[idx];
-            }
-            if (Tab[idx + 1] < biezaca_wartosc_min){
-                biezaca_wartosc_min = Tab[idx + 1];
-            }
-        } else {
-            if (Tab[idx + 1] > biezaca_wartosc_max){
-                biezaca_wartosc_max = Tab[idx + 1];
-            }
-            if (Tab[idx] < biezaca_wartosc_min){
-                biezaca_wartosc_min = Tab[idx];
-            }
+
+    while ((b - a) / 2 > epsilon) {
+        double c = (a + b) / 2;
+        double fc = funkcja(c);
+
+        if (fc == 0)
+            return c;
+        else if (fa * fc < 0)
+            b = c;
+        else
+            a = c;
+    }
+    return (a + b) / 2;
+}
+
+// 2. Obliczanie pierwiastka kwadratowego metodą Herona
+double pierwiastekKwadratowyMetodaHerona(double x) {
+    if (x == 0) return 0;
+    double guess = x / 2.0;
+
+    while (true) {
+        double nextGuess = 0.5 * (guess + x / guess);
+
+        if (abs(nextGuess - guess) < 0.0001) {
+            return nextGuess;
         }
+        guess = nextGuess;
     }
-    cout<<"Max: "<<biezaca_wartosc_max<<" Min: "<<biezaca_wartosc_min<<endl;
 }
-void polaczZbiory(int poczatkowy, int srodkowy, int ostatni, double Tab[],int n_elementow) {
-    int Tab_pom[n_elementow];
-    int idx, jdx, qdx;
-    for (idx = poczatkowy; idx <= ostatni; idx++) {
-        Tab_pom[idx] = Tab[idx];
+
+// 3. Stos (from scratch)
+class Stos {
+private:
+    vector<int> stos;
+public:
+    void dodaj(int element) {
+        stos.push_back(element);
     }
-    idx = poczatkowy;
-    jdx = srodkowy + 1;
-    qdx = poczatkowy;
-    while (idx <= srodkowy && jdx <= ostatni){
-        if (Tab_pom[idx] < Tab_pom[jdx]) {
-            Tab[qdx++] = Tab_pom[idx++];
-        } else {
-            Tab[qdx++] = Tab_pom[jdx++];
+
+    void wypisz() {
+        for (int i = stos.size() - 1; i >= 0; --i) {
+            cout << stos[i] << " ";
         }
+        cout << endl;
     }
-    while (idx <= srodkowy){
-            Tab[qdx++] = Tab_pom[idx++];
+
+    void usun() {
+        if (!stos.empty())
+            stos.pop_back();
     }
-}
-void sortujPrzezScalanie(int poczatkowy, int ostatni, double Tab[],int n_elementow){
-    int srodkowy;
-    cout<<"\n poczatkowy: "<<Tab[poczatkowy]<<" ostatni: "<<Tab[ostatni]<<"\n"<<endl;
-    if (poczatkowy < ostatni){
-    srodkowy = (poczatkowy + ostatni) / 2;
-    cout<<"srodkowy: "<<Tab[srodkowy]<<endl;
-    sortujPrzezScalanie(poczatkowy, srodkowy,Tab,n_elementow);
-    sortujPrzezScalanie(srodkowy + 1, ostatni,Tab,n_elementow);
-    polaczZbiory(poczatkowy, srodkowy, ostatni,Tab,n_elementow);
+};
+
+// 4. Lista dwukierunkowa (biblioteka standardowa C++)
+void dodajElementyZPlikuDoListy(const string& nazwaPliku, list<int>& lista) {
+    ifstream plik(nazwaPliku);
+    if (!plik.is_open()) {
+        cout << "Nie można otworzyć pliku." << endl;
+        return;
     }
-}
-void quick_sort(double Tab[],int n_elementow, int lewy, int prawy)
-{
-	if(prawy <= lewy) return;
 
-	int i = lewy - 1, j = prawy + 1,
-	pivot = Tab[(lewy+prawy)/2]; //wybieramy punkt odniesienia
-	while(1)
-	{
-		//szukam elementu wiekszego lub rownego piwot stojacego
-		//po prawej stronie wartosci pivot
-		while(pivot>Tab[++i]);
-		//szukam elementu mniejszego lub rownego pivot stojacego
-		//po lewej stronie wartosci pivot
-		while(pivot<Tab[--j]);
-		//jesli liczniki sie nie minely to zamie� elementy ze soba
-		//stojace po niewlasciwej stronie elementu pivot
-		if( i <= j)
-			//funkcja swap zamienia wartosciami tab[i] z tab[j]
-			swap(Tab[i],Tab[j]);
-		else
-			break;
-	}
-
-	if(j > lewy){
-        quick_sort(Tab,n_elementow, lewy, j);
-	}
-	if(i < prawy){
-        quick_sort(Tab,n_elementow, i, prawy);
-	}
-
-}
-int main()
-{
-    srand(time(NULL));
-    stworz_dane();
-    ifstream plik;
-
-    //wczytaj ilosc
-    plik.open("dane.txt");
-    double liczba;
-    int licznik=0;
-    string liczba_napis;
-    while(!plik.eof()){
-        getline(plik, liczba_napis,';');
-        cout<<liczba_napis<<endl;
-        licznik++;
+    string linia;
+    while (getline(plik, linia, ',')) {
+        int element;
+        stringstream(linia) >> element;
+        lista.push_back(element);
     }
+
     plik.close();
+}
 
-    //wczytaj dane do tablicy
-    plik.open("dane.txt");
-    double *Tab;
-    int n_elementow=licznik;
-    Tab = new double[n_elementow];
-    int i=0;
-    while(!plik.eof()){
-        getline(plik, liczba_napis,';');
-        stringstream ss;
-        ss << liczba_napis;
-        ss >> Tab[i];
-        i++;
+void sortujListe(list<int>& lista) {
+    lista.sort();
+}
 
-    }
-    plik.close();
+void usunElementZListy(list<int>& lista, int element) {
+    lista.remove(element);
+}
 
-    min_max(Tab,n_elementow);
-//    cout<<"Merge sort:"<<endl;
-//    cout<<"Zbior przed sortowaniem:\n";
-//    for (int idx = 0; idx < n_elementow-1; idx++){
-//        cout<<Tab[idx]<<" ";
-//    }
-//    sortujPrzezScalanie(0, n_elementow - 2,Tab,n_elementow);
-//      cout<<"\n Zbior po sortowaniu: \n";
-//    for (int idx = 0; idx < n_elementow-1; idx++){
-//        cout<<Tab[idx]<<" ";
-//    }
-    cout<<"Quick sort"<<endl;
-    cout<<"Zbior przed sortowaniem:\n";
-    for (int idx = 0; idx < n_elementow-1; idx++){
-        cout<<Tab[idx]<<" ";
+void dodajElementDoListy(list<int>& lista, int element) {
+    lista.push_back(element);
+}
+
+void wypiszListe(const list<int>& lista) {
+    cout << "Zawartość listy: ";
+    for (const auto& element : lista) {
+        cout << element << " ";
     }
-    quick_sort(Tab,n_elementow,0, n_elementow-2);
-        cout<<"\n Zbior po sortowaniu: \n";
-    for (int idx = 0; idx < n_elementow-1; idx++){
-        cout<<Tab[idx]<<" ";
-    }
-    delete[] Tab;
+    cout << endl;
+}
+
+int main() {
+    // 1. Wyznaczanie miejsc zerowych funkcji metodą połowienia
+    double miejsceZero = miejsceZeroweMetodaPolowienia(0, 5, 0.0001);
+    cout << "Miejsce zerowe: " << miejsceZero << endl;
+
+    // 2. Obliczanie pierwiastka kwadratowego metodą Herona
+    double sqrtValue = pierwiastekKwadratowyMetodaHerona(30);
+    cout << "Pierwiastek kwadratowy z wynosi: " << sqrtValue << endl;
+
+    // 3. Stos (from scratch)
+    Stos stos;
+    stos.dodaj(5);
+    stos.dodaj(10);
+    stos.dodaj(15);
+    stos.wypisz();
+    stos.usun();
+    stos.wypisz();
+
+    // 4. Lista dwukierunkowa (biblioteka standardowa C++)
+    list<int> lista;
+    dodajElementyZPlikuDoListy("plik.txt", lista);
+    sortujListe(lista);
+    wypiszListe(lista);
+    usunElementZListy(lista, 10);
+    dodajElementDoListy(lista, 20);
+    wypiszListe(lista);
+
     return 0;
 }
