@@ -4,38 +4,37 @@
 #include <vector>
 #include <algorithm>
 #include <list>
-
+#include <iomanip>
 using namespace std;
 
-// 1. Wyznaczanie miejsc zerowych funkcji metodą połowienia
-double funkcja(double x) {
-    return x*x - 6;
+double f(double x)
+{
+    return x * (x * (x - 3) + 2) - 6;
 }
 
-double miejsceZeroweMetodaPolowienia(double a, double b, double epsilon) {
-    double fa = funkcja(a);
-    double fb = funkcja(b);
-
-    if (fa * fb > 0) {
-        cout << "Nie można zagwarantować istnienia miejsca zerowego w przedziale [" << a << ", " << b << "]." << endl;
-        return -1;
-    }
-
-    while ((b - a) / 2 > epsilon) {
-        double c = (a + b) / 2;
-        double fc = funkcja(c);
-
-        if (fc == 0)
-            return c;
-        else if (fa * fc < 0)
-            b = c;
+double miejsceZeroweMetodaPolowienia(double a, double b, double epsilon)
+{
+    if (f(a) == 0.0) return a;
+    if (f(b) == 0.0) return b;
+    
+    double srodek;
+    
+    while (b - a > epsilon)
+    {
+        srodek = (a + b) / 2;
+        
+        if (f(srodek) == 0.0)
+            return srodek;
+        
+        if (f(a) * f(srodek) < 0) 
+            b = srodek;
         else
-            a = c;
+            a = srodek;
     }
     return (a + b) / 2;
 }
 
-// 2. Obliczanie pierwiastka kwadratowego metodą Herona
+// 2. Obliczanie pierwiastka kwadratowego metodą Herona (Newtona-Raphsona)
 double pierwiastekKwadratowyMetodaHerona(double x) {
     if (x == 0) return 0;
     double guess = x / 2.0;
@@ -100,6 +99,7 @@ void usunElementZListy(list<int>& lista, int element) {
 
 void dodajElementDoListy(list<int>& lista, int element) {
     lista.push_back(element);
+    cout << "Dodano element " << element << " do listy." << endl;
 }
 
 void wypiszListe(const list<int>& lista) {
@@ -111,13 +111,15 @@ void wypiszListe(const list<int>& lista) {
 }
 
 int main() {
+    // Testowanie funkcji
+
     // 1. Wyznaczanie miejsc zerowych funkcji metodą połowienia
-    double miejsceZero = miejsceZeroweMetodaPolowienia(0, 5, 0.0001);
-    cout << "Miejsce zerowe: " << miejsceZero << endl;
+    double miejsceZero = miejsceZeroweMetodaPolowienia(-10, 10, 0.00001);
+    cout << "Miejsce zerowe metodą połowienia wynosi: " << fixed << setprecision(5) << miejsceZero << endl;
 
     // 2. Obliczanie pierwiastka kwadratowego metodą Herona
-    double sqrtValue = pierwiastekKwadratowyMetodaHerona(30);
-    cout << "Pierwiastek kwadratowy z wynosi: " << sqrtValue << endl;
+    double sqrtValue = pierwiastekKwadratowyMetodaHerona(25);
+    cout << "Pierwiastek kwadratowy z 25 wynosi: " << fixed << setprecision(5) << sqrtValue << endl;
 
     // 3. Stos (from scratch)
     Stos stos;
@@ -134,6 +136,7 @@ int main() {
     sortujListe(lista);
     wypiszListe(lista);
     usunElementZListy(lista, 10);
+    wypiszListe(lista);
     dodajElementDoListy(lista, 20);
     wypiszListe(lista);
 
